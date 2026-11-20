@@ -9,8 +9,18 @@ services:
         sync: false
       - key: TAILSCALE_VERSION
         value: 1.96.4
+      # Set to an empty value in the dashboard to stop advertising the private network once
+      # everyone connects through the forwarder below.
       - key: ADVERTISE_ROUTES
         value: 10.0.0.0/8
+      # host:port of the private service to forward to, for example dpg-abc123-a:5432.
+      # Leave unset for a plain subnet router.
+      - key: FORWARD_TARGET
+        sync: false
+      # Tailscale Service that publishes the forwarded port (ozone-db.<tailnet>.ts.net).
+      # Remove to serve the port on this node's own tailnet name instead.
+      - key: TAILSCALE_SERVICE
+        value: svc:ozone-db
     disk:
       name: tailscale-state
       mountPath: /var/lib/tailscale
