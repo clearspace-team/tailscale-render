@@ -24,7 +24,7 @@ ADVERTISE_ROUTES=${ADVERTISE_ROUTES-10.0.0.0/8}
 until /render/tailscale up --authkey="${TAILSCALE_AUTHKEY}" --hostname="${RENDER_SERVICE_NAME}" --advertise-routes="$ADVERTISE_ROUTES"; do
   sleep 0.1
 done
-tailscale_ip=$(/render/tailscale ip)
+tailscale_ip=$(/render/tailscale ip -4)
 echo "Tailscale is up at IP ${tailscale_ip}"
 echo "Advertised routes: ${ADVERTISE_ROUTES:-none}"
 
@@ -46,6 +46,9 @@ if [ -n "${FORWARD_TARGET:-}" ]; then
   # Publish the local port to the tailnet. The serve config is stored in the state on disk, so
   # rerunning this on every start is harmless. A failure here (service not defined yet, host
   # not approved) is logged and does not stop the router.
+  # Reset first so the stored config always matches the current variables: without it, a port
+  # once served on the node itself stays there after TAILSCALE_SERVICE is set.
+  /render/tailscale serve reset || true
   if [ -n "${TAILSCALE_SERVICE:-}" ]; then
     if /render/tailscale serve --service="${TAILSCALE_SERVICE}" --tcp="${FORWARD_PORT}" "tcp://localhost:${FORWARD_PORT}"; then
       echo "Serving ${TAILSCALE_SERVICE} on tcp/${FORWARD_PORT}"
